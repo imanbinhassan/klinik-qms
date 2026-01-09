@@ -5,18 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pendaftaran Pintar MyKad</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .card { background: white; width: 100%; max-width: 400px; border-radius: 15px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .btn-daftar { width: 100%; background: #25d366; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .pilihan-manual { display: none; background: #fff9e6; padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px solid #ffeeba; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn-daftar { width: 100%; background: #25d366; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        #resultTicket { display: none; background: #fff; border: 2px dashed #25d366; padding: 20px; border-radius: 10px; margin-top: 20px; text-align: center; color: #333; }
+        .nombor-tiket { font-size: 50px; font-weight: bold; color: #25d366; margin: 10px 0; }
     </style>
 </head>
 <body>
 
-<div class="card">
+<div class="card" id="regForm">
     <h2 style="text-align:center">Klinik Pintar</h2>
-    <p style="font-size:14px; color:#666">Sistem akan mengesan kaunter secara automatik berdasarkan umur anda.</p>
+    <p style="font-size:14px; color:#666; text-align: center;">Sila isi maklumat MyKad anda.</p>
     
     <label>Nama Penuh</label>
     <input type="text" id="nama" placeholder="Nama penuh anda">
@@ -24,81 +25,73 @@
     <label>No. IC (Tanpa -)</label>
     <input type="number" id="ic" placeholder="Contoh: 900515015566" oninput="kiraUmur()">
 
-    <div id="manualInput" class="pilihan-manual">
-        <label>Tarikh Lahir</label>
-        <input type="date" id="dob" onchange="kiraUmurManual()">
-    </div>
-
-    <p style="font-size: 13px; color: #888;">
-        Klik <a href="#" onclick="tunjukManual()">di sini</a> jika tiada No. IC.
-    </p>
-
-    <div id="infoUmur" style="margin: 15px 0; font-weight: bold; color: #2c3e50;">
+    <div id="infoUmur" style="margin: 15px 0; font-weight: bold; color: #2c3e50; text-align: center;">
         Umur: - | Kaunter: -
     </div>
 
-    <button class="btn-daftar" onclick="hantarWhatsApp()">Daftar & Ambil Nombor</button>
+    <button class="btn-daftar" onclick="prosesDaftar()">Daftar Sekarang</button>
+</div>
+
+<div id="resultTicket" class="card">
+    <h3>TIKET GILIRAN ANDA</h3>
+    <div id="dispNombor" class="nombor-tiket">----</div>
+    <p id="dispNama" style="font-weight: bold;"></p>
+    <p>Sila klik butang di bawah untuk hantar pengesahan ke WhatsApp klinik.</p>
+    <button class="btn-daftar" onclick="bukaWhatsApp()">Hantar ke WhatsApp</button>
 </div>
 
 <script>
     let umurPesakit = 0;
     let kategoriKaunter = "";
-
-    // Fungsi untuk jana nombor rawak/simulasi (Sebab kita belum ada database)
-    function janaNombor(jenis) {
-        let prefix = (jenis === "Warga Emas") ? "2" : "1";
-        let rawak = Math.floor(Math.random() * 900) + 100; // Jana 3 angka rawak
-        return prefix + rawak;
-    }
+    let nomborGiliranFinal = "";
 
     function kiraUmur() {
         let ic = document.getElementById('ic').value;
-        if (ic.length >= 2) {
+        if (ic.length >= 6) {
             let tahunLahir = parseInt(ic.substring(0, 2));
             let tahunSekarang = new Date().getFullYear() % 100;
             let tahunPenuh = (tahunLahir > tahunSekarang) ? (1900 + tahunLahir) : (2000 + tahunLahir);
             umurPesakit = new Date().getFullYear() - tahunPenuh;
             
-            if (umurPesakit >= 60) {
-                kategoriKaunter = "Warga Emas";
-            } else {
-                kategoriKaunter = "Biasa";
-            }
+            kategoriKaunter = (umurPesakit >= 60) ? "Warga Emas" : "Biasa";
             document.getElementById('infoUmur').innerText = `Umur: ${umurPesakit} tahun | Kaunter: ${kategoriKaunter}`;
         }
     }
 
-    function hantarWhatsApp() {
+    function prosesDaftar() {
         let nama = document.getElementById('nama').value;
-        let noIC = document.getElementById('ic').value;
-        
         if (!nama || umurPesakit === 0) {
             alert("Sila isi nama dan No. IC dengan betul.");
             return;
         }
 
-        // Jana nombor giliran simulasi
-        let nomborGiliran = janaNombor(kategoriKaunter);
+        // Jana Nombor
+        let prefix = (kategoriKaunter === "Warga Emas") ? "2" : "1";
+        nomborGiliranFinal = prefix + (Math.floor(Math.random() * 900) + 100);
 
-        // --- TUKAR NOMBOR DI BAWAH INI ---
-        let noKlinik = "601172982717"; // <-- Letak nombor telefon anda di sini!
+        // Papar Tiket, Sorok Borang
+        document.getElementById('regForm').style.display = 'none';
+        document.getElementById('resultTicket').style.display = 'block';
+        document.getElementById('dispNombor').innerText = nomborGiliranFinal;
+        document.getElementById('dispNama').innerText = nama;
+    }
+
+    function bukaWhatsApp() {
+        let nama = document.getElementById('nama').value;
+        let ic = document.getElementById('ic').value;
+        
+        // --- PASTIKAN NOMBOR INI TEPAT (60 + No Tel) ---
+        let noKlinik = "601172982717"; 
         
         let mesej = `*PENDAFTARAN KLINIK*%0A` +
                     `Nama: ${nama}%0A` +
-                    `IC: ${noIC}%0A` +
-                    `Umur: ${umurPesakit}%0A` +
+                    `IC: ${ic}%0A` +
                     `Kategori: ${kategoriKaunter}%0A` +
-                    `*NOMBOR GILIRAN SAYA: ${nomborGiliran}*`;
+                    `*NOMBOR GILIRAN: ${nomborGiliranFinal}*`;
 
-        // Beritahu pesakit nombor mereka sebelum ke WhatsApp
-        alert("Nombor Giliran Anda: " + nomborGiliran + "\nSila tekan OK untuk hantar pengesahan ke WhatsApp Klinik.");
-        
         window.location.href = `https://wa.me/${noKlinik}?text=${mesej}`;
     }
 </script>
+
 </body>
 </html>
-
-
-
-
