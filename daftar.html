@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pendaftaran Pintar MyKad</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; width: 100%; max-width: 400px; border-radius: 15px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn-daftar { width: 100%; background: #25d366; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .pilihan-manual { display: none; background: #fff9e6; padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px solid #ffeeba; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2 style="text-align:center">Klinik Pintar</h2>
+    <p style="font-size:14px; color:#666">Sistem akan mengesan kaunter secara automatik berdasarkan umur anda.</p>
+    
+    <label>Nama Penuh</label>
+    <input type="text" id="nama" placeholder="Nama penuh anda">
+
+    <label>No. IC (Tanpa -)</label>
+    <input type="number" id="ic" placeholder="Contoh: 900515015566" oninput="kiraUmur()">
+
+    <div id="manualInput" class="pilihan-manual">
+        <label>Tarikh Lahir</label>
+        <input type="date" id="dob" onchange="kiraUmurManual()">
+    </div>
+
+    <p style="font-size: 13px; color: #888;">
+        Klik <a href="#" onclick="tunjukManual()">di sini</a> jika tiada No. IC.
+    </p>
+
+    <div id="infoUmur" style="margin: 15px 0; font-weight: bold; color: #2c3e50;">
+        Umur: - | Kaunter: -
+    </div>
+
+    <button class="btn-daftar" onclick="hantarWhatsApp()">Daftar & Ambil Nombor</button>
+</div>
+
+<script>
+    let umurPesakit = 0;
+    let kategoriKaunter = "";
+
+    function tunjukManual() {
+        document.getElementById('manualInput').style.display = 'block';
+    }
+
+    function kiraUmur() {
+        let ic = document.getElementById('ic').value;
+        if (ic.length >= 2) {
+            let tahunLahir = parseInt(ic.substring(0, 2));
+            let tahunSekarang = new Date().getFullYear() % 100; // Ambil 2 digit tahun (24)
+            
+            // Logik untuk tentukan abad (1900-an atau 2000-an)
+            let tahunPenuh = (tahunLahir > tahunSekarang) ? (1900 + tahunLahir) : (2000 + tahunLahir);
+            
+            let tahunSemasaPenuh = new Date().getFullYear();
+            umurPesakit = tahunSemasaPenuh - tahunPenuh;
+            tentukanKaunter();
+        }
+    }
+
+    function kiraUmurManual() {
+        let dob = document.getElementById('dob').value;
+        if (dob) {
+            let lahir = new Date(dob);
+            let sekarang = new Date();
+            umurPesakit = sekarang.getFullYear() - lahir.getFullYear();
+            tentukanKaunter();
+        }
+    }
+
+    function tentukanKaunter() {
+        if (umurPesakit >= 60) {
+            kategoriKaunter = "Kaunter 2 (Warga Emas)";
+        } else {
+            kategoriKaunter = "Kaunter 1 (Biasa)";
+        }
+        document.getElementById('infoUmur').innerText = `Umur: ${umurPesakit} tahun | ${kategoriKaunter}`;
+    }
+
+    function hantarWhatsApp() {
+        let nama = document.getElementById('nama').value;
+        if (!nama || umurPesakit === 0) {
+            alert("Sila lengkapkan maklumat.");
+            return;
+        }
+
+        let noKlinik = "60123456789"; // TUKAR KEPADA NO ANDA
+        let mesej = `Halo Klinik, saya *${nama}* (Umur: ${umurPesakit}). Saya telah mendaftar untuk *${kategoriKaunter}*. Sila berikan nombor giliran saya.`;
+        
+        window.location.href = `https://wa.me/${noKlinik}?text=${encodeURIComponent(mesej)}`;
+    }
+</script>
+
+</body>
+</html>
