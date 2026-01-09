@@ -44,58 +44,59 @@
     let umurPesakit = 0;
     let kategoriKaunter = "";
 
-    function tunjukManual() {
-        document.getElementById('manualInput').style.display = 'block';
+    // Fungsi untuk jana nombor rawak/simulasi (Sebab kita belum ada database)
+    function janaNombor(jenis) {
+        let prefix = (jenis === "Warga Emas") ? "2" : "1";
+        let rawak = Math.floor(Math.random() * 900) + 100; // Jana 3 angka rawak
+        return prefix + rawak;
     }
 
     function kiraUmur() {
         let ic = document.getElementById('ic').value;
         if (ic.length >= 2) {
             let tahunLahir = parseInt(ic.substring(0, 2));
-            let tahunSekarang = new Date().getFullYear() % 100; // Ambil 2 digit tahun (24)
-            
-            // Logik untuk tentukan abad (1900-an atau 2000-an)
+            let tahunSekarang = new Date().getFullYear() % 100;
             let tahunPenuh = (tahunLahir > tahunSekarang) ? (1900 + tahunLahir) : (2000 + tahunLahir);
+            umurPesakit = new Date().getFullYear() - tahunPenuh;
             
-            let tahunSemasaPenuh = new Date().getFullYear();
-            umurPesakit = tahunSemasaPenuh - tahunPenuh;
-            tentukanKaunter();
+            if (umurPesakit >= 60) {
+                kategoriKaunter = "Warga Emas";
+            } else {
+                kategoriKaunter = "Biasa";
+            }
+            document.getElementById('infoUmur').innerText = `Umur: ${umurPesakit} tahun | Kaunter: ${kategoriKaunter}`;
         }
-    }
-
-    function kiraUmurManual() {
-        let dob = document.getElementById('dob').value;
-        if (dob) {
-            let lahir = new Date(dob);
-            let sekarang = new Date();
-            umurPesakit = sekarang.getFullYear() - lahir.getFullYear();
-            tentukanKaunter();
-        }
-    }
-
-    function tentukanKaunter() {
-        if (umurPesakit >= 60) {
-            kategoriKaunter = "Kaunter 2 (Warga Emas)";
-        } else {
-            kategoriKaunter = "Kaunter 1 (Biasa)";
-        }
-        document.getElementById('infoUmur').innerText = `Umur: ${umurPesakit} tahun | ${kategoriKaunter}`;
     }
 
     function hantarWhatsApp() {
         let nama = document.getElementById('nama').value;
+        let noIC = document.getElementById('ic').value;
+        
         if (!nama || umurPesakit === 0) {
-            alert("Sila lengkapkan maklumat.");
+            alert("Sila isi nama dan No. IC dengan betul.");
             return;
         }
 
-        let noKlinik = "601172982717"; // TUKAR KEPADA NO ANDA
-        let mesej = `Halo Klinik, saya *${nama}* (Umur: ${umurPesakit}). Saya telah mendaftar untuk *${kategoriKaunter}*. Sila berikan nombor giliran saya.`;
+        // Jana nombor giliran simulasi
+        let nomborGiliran = janaNombor(kategoriKaunter);
+
+        // --- TUKAR NOMBOR DI BAWAH INI ---
+        let noKlinik = "60111234567"; // <-- Letak nombor telefon anda di sini!
         
-        window.location.href = `https://wa.me/${noKlinik}?text=${encodeURIComponent(mesej)}`;
+        let mesej = `*PENDAFTARAN KLINIK*%0A` +
+                    `Nama: ${nama}%0A` +
+                    `IC: ${noIC}%0A` +
+                    `Umur: ${umurPesakit}%0A` +
+                    `Kategori: ${kategoriKaunter}%0A` +
+                    `*NOMBOR GILIRAN SAYA: ${nomborGiliran}*`;
+
+        // Beritahu pesakit nombor mereka sebelum ke WhatsApp
+        alert("Nombor Giliran Anda: " + nomborGiliran + "\nSila tekan OK untuk hantar pengesahan ke WhatsApp Klinik.");
+        
+        window.location.href = `https://wa.me/${noKlinik}?text=${mesej}`;
     }
 </script>
-
 </body>
 </html>
+
 
